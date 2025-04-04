@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         S3_BUCKET = 'nottie-angular-app'
-        AWS_REGION = 'us-east-1' // e.g., us-east-1
+        AWS_REGION = 'us-east-1'
         VERSION = "v${env.BUILD_NUMBER}"
     }
 
@@ -29,7 +29,7 @@ pipeline {
         stage('Create Artifact') {
             steps {
                 script {
-                    def ARTIFACT_NAME = "angular_app-${VERSION}.tar.gz"  // Use VERSION here for consistency
+                    def ARTIFACT_NAME = "angular_app-${VERSION}.tar.gz"
                     sh "tar -czf ${ARTIFACT_NAME} -C dist/angular_app ."
                 }
             }
@@ -39,8 +39,8 @@ pipeline {
             steps {
                 withAWS(credentials: 'aws-jenkins-credentials', region: "${AWS_REGION}") {
                     s3Upload(
-                        file: "angular_app-${VERSION}.tar.gz",  // Use the same name as created earlier
-                        bucket: "${S3_BUCKET}", 
+                        file: "angular_app-${VERSION}.tar.gz",
+                        bucket: "${S3_BUCKET}",
                         path: "artifacts/"
                     )
                 }
@@ -60,12 +60,14 @@ pipeline {
                     )
                 ]) {
                     sh '''
-                        # Secure SSH key permissions
                         chmod 600 $SSH_KEY
 
-                        # Run Ansible with vault password and SSH key
+                        # Optional: Clean up old downloaded artifact
+                        rm -f /tmp/angular_app-${VERSION}.tar.gz
+
+                        # Run Ansible Playbook with Vault and SSH key
                         ansible-playbook -i inventory deploy.yml \
-                            --extra-vars "artifact_version=$VERSION" \
+                            --extra-vars "artifact_version=${VERSION}" \
                             --vault-password-file <(echo "$VAULT_PASSWORD") \
                             --private-key $SSH_KEY
                     '''
@@ -74,14 +76,12 @@ pipeline {
         }
     }
 
-
     post {
         success {
-            echo 'Deployment successful!'
+            echo '✅ Deployment successful!'
         }
         failure {
-            echo 'Deployment failed!'
+            echo '❌ Deployment failed!'
         }
     }
 }
-
