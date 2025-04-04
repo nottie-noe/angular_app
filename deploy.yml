@@ -1,37 +1,47 @@
 ---
-- name: Deploy Angular App
-  hosts: all
-  become: yes
+- name: Deploy Angular App to Web Server
+  hosts: web-server1
+  become: true
+  vars:
+    artifact_url: "s3://nottie-angular-app /artifacts/angular_app-{{ artifact_version }}.tar.gz"
+    artifact_path: "/tmp/angular_app-{{ artifact_version }}.tar.gz"
+    target_dir: "/var/www/html/angular_app"
 
   tasks:
     - name: Install Apache
-      yum:
-        name: httpd
+      apt:
+        name: apache2
         state: present
+        update_cache: yes
 
     - name: Ensure Apache is running
       service:
-        name: httpd
+        name: apache2
         state: started
         enabled: yes
 
     - name: Download Angular App artifact from S3
-      amazon.aws.s3:
-        bucket: "nottie-angular-app"
-        object: "artifacts/{{ artifact_version }}.tar.gz"
-        dest: "/var/www/html/"
+      aws_s3:
+        bucket: "{{ artifact_url }}"
+        object: "artifacts/angular_app-{{ artifact_version }}.tar.gz"
+        dest: "{{ artifact_path }}"
         mode: get
-        profile: default  # Use the default profile
-        region: "us-east-1"
-      register: s3_download
 
-    - name: Extract Angular App
-      command:
-        cmd: "tar -xzvf /var/www/html/angular_app-v27.tar.gz -C /var/www/html/"
-      when: s3_download.changed
+    - name: Extract the Angular app artifact
+      unarchive:
+        src: "{{ artifact_path }}"
+        dest: "{{ target_dir }}"
+        remote_src: yes
+        creates: "{{ target_dir }}/index.html"
 
-    - name: Restart Apache to serve the Angular app
+    - name: Set permissions for the web server
+      file:
+        path: "{{ target_dir }}"
+        owner: www-data
+        group: www-data
+        recurse: yes
+
+    - name: Restart Apache to serve new content
       service:
-        name: httpd
+        name: apache2
         state: restarted
-      when: s3_download.changed
