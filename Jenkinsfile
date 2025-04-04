@@ -59,11 +59,11 @@ pipeline {
                         variable: 'VAULT_PASSWORD'
                     ),
                     string(
-                        credentialsId: 'aws-jenkins-credentials',
+                        credentialsId: 'aws-access-key-id',
                         variable: 'AWS_ACCESS_KEY_ID'
                     ),
                     string(
-                        credentialsId: 'aws-jenkins-credentials',
+                        credentialsId: 'aws-secret-access-key',
                         variable: 'AWS_SECRET_ACCESS_KEY'
                     )
                 ]) {
@@ -73,12 +73,11 @@ pipeline {
                         # Optional: Clean up old downloaded artifact
                         rm -f /tmp/angular_app-${VERSION}.tar.gz
 
-                        # Run Ansible Playbook with Vault and SSH key
+                        # Run Ansible Playbook with Vault and AWS credentials
                         ansible-playbook -i inventory deploy.yml \
-                            --extra-vars "artifact_version=${VERSION}" \
+                            --extra-vars "artifact_version=${VERSION} aws_access_key=${AWS_ACCESS_KEY_ID} aws_secret_key=${AWS_SECRET_ACCESS_KEY}" \
                             --vault-password-file <(echo "$VAULT_PASSWORD") \
-                            --private-key $SSH_KEY \
-                            --extra-vars "aws_access_key=${AWS_ACCESS_KEY_ID} aws_secret_key=${AWS_SECRET_ACCESS_KEY}"
+                            --private-key $SSH_KEY
                     '''
                 }
             }
