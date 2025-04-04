@@ -1,47 +1,37 @@
 ---
-- name: Deploy Angular App to Web Server
-  hosts: webserver
-  become: true
-  vars:
-    s3_bucket: "nottie-angular-app"  # Pure bucket name without URI prefix
-    artifact_version: "v27"  # Example version, should be passed as extra var
-    target_dir: "/var/www/html/angular_app"
+- name: Deploy Angular App
+  hosts: all
+  become: yes
 
   tasks:
     - name: Install Apache
-      apt:
-        name: apache2
+      yum:
+        name: httpd
         state: present
-        update_cache: yes
 
     - name: Ensure Apache is running
       service:
-        name: apache2
+        name: httpd
         state: started
         enabled: yes
 
     - name: Download Angular App artifact from S3
-      amazon.aws.s3_object:  # Correct collection/module name
-        bucket: "{{ s3_bucket }}"
-        object: "artifacts/angular_app-{{ artifact_version }}.tar.gz"  # Full object key
-        dest: "/tmp/angular_app-{{ artifact_version }}.tar.gz"
+      amazon.aws.s3:
+        bucket: "nottie-angular-app"
+        object: "artifacts/angular_app-v27.tar.gz"
+        dest: "/var/www/html/angular_app-v27.tar.gz"
         mode: get
+        profile: default  # Use the default profile
+        region: "us-east-1"
+      register: s3_download
 
-    - name: Extract the Angular app artifact
-      unarchive:
-        src: "/tmp/angular_app-{{ artifact_version }}.tar.gz"
-        dest: "{{ target_dir }}"
-        remote_src: yes
-        creates: "{{ target_dir }}/index.html"
+    - name: Extract Angular App
+      command:
+        cmd: "tar -xzvf /var/www/html/angular_app-v27.tar.gz -C /var/www/html/"
+      when: s3_download.changed
 
-    - name: Set permissions for the web server
-      file:
-        path: "{{ target_dir }}"
-        owner: www-data
-        group: www-data
-        recurse: yes
-
-    - name: Restart Apache to serve new content
+    - name: Restart Apache to serve the Angular app
       service:
-        name: apache2
+        name: httpd
         state: restarted
+      when: s3_download.changed
