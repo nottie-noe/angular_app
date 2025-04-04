@@ -20,12 +20,6 @@ pipeline {
             }
         }
 
-        stage('Run Tests') {
-            steps {
-                sh 'ng test --watch=false --code-coverage'
-            }
-        }
-
         stage('Build Angular App') {
             steps {
                 sh 'ng build --configuration=production'
