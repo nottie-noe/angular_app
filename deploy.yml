@@ -4,16 +4,15 @@
   become: true
 
   vars_files:
-    - aws_credentials.yml   # <-- Encrypted with ansible-vault
+    - aws_credentials.yml  # <-- Encrypted with ansible-vault, if you still use it
 
   vars:
-    artifact_version: "{{ artifact_version }}"
+    artifact_version: "{{ artifact_version }}"  # Artifact version passed from Jenkins
     artifact_url: "s3://nottie-angular-app/artifacts/angular_app-{{ artifact_version }}.tar.gz"
     artifact_path: "/tmp/angular_app-{{ artifact_version }}.tar.gz"
     target_dir: "/var/www/html/angular_app"
-    s3_bucket: "nottie-angular-app"
-    aws_access_key: "{{ aws_access_key }}"  # Now passed from Jenkins as extra-vars
-    aws_secret_key: "{{ aws_secret_key }}"  # Now passed from Jenkins as extra-vars
+    aws_access_key: "{{ aws_access_key }}"  # AWS access key passed from Jenkins
+    aws_secret_key: "{{ aws_secret_key }}"  # AWS secret key passed from Jenkins
 
   tasks:
     - name: Install Apache
@@ -30,13 +29,13 @@
 
     - name: Download Angular App artifact from S3
       amazon.aws.s3_object:
-        bucket: "{{ s3_bucket }}"
+        bucket: nottie-angular-app
         object: "artifacts/angular_app-{{ artifact_version }}.tar.gz"
         dest: "{{ artifact_path }}"
         mode: get
+        aws_access_key: "{{ aws_access_key }}"  # Use the passed AWS access key
+        aws_secret_key: "{{ aws_secret_key }}"  # Use the passed AWS secret key
         region: us-east-1
-        aws_access_key: "{{ aws_access_key }}"
-        aws_secret_key: "{{ aws_secret_key }}"
 
     - name: Extract the Angular app artifact
       unarchive:
