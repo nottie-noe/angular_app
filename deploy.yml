@@ -2,7 +2,12 @@
 - name: Deploy Angular App to Web Server
   hosts: web-server1
   become: true
+
+  vars_files:
+    - aws_credentials.yml   # <-- Encrypted with ansible-vault
+
   vars:
+    artifact_version: "1.0.0"  # <-- Define your artifact version here or pass it via --extra-vars
     artifact_url: "s3://nottie-angular-app/artifacts/angular_app-{{ artifact_version }}.tar.gz"
     artifact_path: "/tmp/angular_app-{{ artifact_version }}.tar.gz"
     target_dir: "/var/www/html/angular_app"
@@ -23,8 +28,8 @@
     - name: Download Angular App artifact from S3
       amazon.aws.s3_object:
         bucket: nottie-angular-app
-        object: artifacts/angular_app-{{ artifact_version }}.tar.gz
-        dest: /var/www/html/angular_app.tar.gz
+        object: "artifacts/angular_app-{{ artifact_version }}.tar.gz"
+        dest: "{{ artifact_path }}"
         mode: get
         aws_access_key: "{{ aws_access_key }}"
         aws_secret_key: "{{ aws_secret_key }}"

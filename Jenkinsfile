@@ -49,12 +49,31 @@ pipeline {
 
         stage('Deploy with Ansible') {
             steps {
-                sh '''
-                ansible-playbook -i inventory deploy.yml --extra-vars "artifact_version=$VERSION"
-                '''
+                withCredentials([
+                    sshUserPrivateKey(
+                        credentialsId: 'ansible-ssh-key',
+                        keyFileVariable: 'SSH_KEY'
+                    ),
+                    string(
+                        credentialsId: 'ansible-vault-password',
+                        variable: 'VAULT_PASSWORD'
+                    )
+                ]) {
+                    sh '''
+                        # Secure SSH key permissions
+                        chmod 600 $SSH_KEY
+
+                        # Run Ansible with vault password and SSH key
+                        ansible-playbook -i inventory deploy.yml \
+                            --extra-vars "artifact_version=$VERSION" \
+                            --vault-password-file <(echo "$VAULT_PASSWORD") \
+                            --private-key $SSH_KEY
+                    '''
+                }
             }
         }
     }
+
 
     post {
         success {
