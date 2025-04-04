@@ -1,9 +1,9 @@
 ---
 - name: Deploy Angular App to Web Server
-  hosts: webservers
+  hosts: web-server1
   become: true
   vars:
-    artifact_url: "s3://your-s3-bucket/artifacts/angular_app-{{ artifact_version }}.tar.gz"
+    artifact_url: "s3://nottie-angular-app /artifacts/angular_app-{{ artifact_version }}.tar.gz"
     artifact_path: "/tmp/angular_app-{{ artifact_version }}.tar.gz"
     target_dir: "/var/www/html/angular_app"
 
