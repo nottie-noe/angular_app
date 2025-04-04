@@ -21,11 +21,14 @@
         enabled: yes
 
     - name: Download Angular App artifact from S3
-      aws_s3:
-        bucket: "{{ artifact_url }}"
-        object: "artifacts/angular_app-{{ artifact_version }}.tar.gz"
-        dest: "{{ artifact_path }}"
+      amazon.aws.s3_object:
+        bucket: nottie-angular-app
+        object: artifacts/angular_app-{{ artifact_version }}.tar.gz
+        dest: /var/www/html/angular_app.tar.gz
         mode: get
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        region: us-east-1
 
     - name: Extract the Angular app artifact
       unarchive:
