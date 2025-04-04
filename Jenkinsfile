@@ -2,15 +2,15 @@ pipeline {
     agent any
 
     environment {
-        S3_BUCKET = 'your-s3-bucket'
-        AWS_REGION = 'your-region' // e.g., us-east-1
+        S3_BUCKET = 'nottie-angular-app '
+        AWS_REGION = 'us-east-1' // e.g., us-east-1
         VERSION = "v${env.BUILD_NUMBER}"
     }
 
     stages {
         stage('Checkout Code') {
             steps {
-                git 'https://github.com/your-repo/angular-app.git'
+                git 'https://github.com/nottie-noe/angular_app.git'
             }
         }
 
