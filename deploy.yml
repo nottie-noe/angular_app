@@ -3,16 +3,11 @@
   hosts: web-server1
   become: true
 
-  vars_files:
-    - aws_credentials.yml  # <-- Encrypted with ansible-vault, if you still use it
-
   vars:
-    artifact_version: "{{ artifact_version }}"  # Artifact version passed from Jenkins
+    artifact_version: "{{ artifact_version }}"
     artifact_url: "s3://nottie-angular-app/artifacts/angular_app-{{ artifact_version }}.tar.gz"
     artifact_path: "/tmp/angular_app-{{ artifact_version }}.tar.gz"
     target_dir: "/var/www/html/angular_app"
-    aws_access_key: "{{ aws_access_key }}"  # AWS access key passed from Jenkins
-    aws_secret_key: "{{ aws_secret_key }}"  # AWS secret key passed from Jenkins
 
   tasks:
     - name: Install Apache
@@ -33,9 +28,15 @@
         object: "artifacts/angular_app-{{ artifact_version }}.tar.gz"
         dest: "{{ artifact_path }}"
         mode: get
-        aws_access_key: "{{ aws_access_key }}"  # Use the passed AWS access key
-        aws_secret_key: "{{ aws_secret_key }}"  # Use the passed AWS secret key
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
         region: us-east-1
+
+    - name: Create target directory if it does not exist
+      file:
+        path: "{{ target_dir }}"
+        state: directory
+        mode: '0755'
 
     - name: Extract the Angular app artifact
       unarchive:
