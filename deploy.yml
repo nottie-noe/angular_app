@@ -3,10 +3,8 @@
   hosts: webserver
   become: true
   vars:
-    artifact_version: "v27"  # Change this if you want a different version
-    bucket_name: "nottie-angular-app"
-    object_key: "artifacts/angular_app-{{ artifact_version }}.tar.gz"
-    artifact_path: "/tmp/angular_app-{{ artifact_version }}.tar.gz"
+    s3_bucket: "nottie-angular-app"  # Pure bucket name without URI prefix
+    artifact_version: "v27"  # Example version, should be passed as extra var
     target_dir: "/var/www/html/angular_app"
 
   tasks:
@@ -23,15 +21,15 @@
         enabled: yes
 
     - name: Download Angular App artifact from S3
-      amazon.aws.s3_object:
-        bucket: "{{ bucket_name }}"
-        object: "{{ object_key }}"
-        dest: "{{ artifact_path }}"
+      amazon.aws.s3_object:  # Correct collection/module name
+        bucket: "{{ s3_bucket }}"
+        object: "artifacts/angular_app-{{ artifact_version }}.tar.gz"  # Full object key
+        dest: "/tmp/angular_app-{{ artifact_version }}.tar.gz"
         mode: get
 
     - name: Extract the Angular app artifact
       unarchive:
-        src: "{{ artifact_path }}"
+        src: "/tmp/angular_app-{{ artifact_version }}.tar.gz"
         dest: "{{ target_dir }}"
         remote_src: yes
         creates: "{{ target_dir }}/index.html"
