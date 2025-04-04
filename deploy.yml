@@ -1,10 +1,10 @@
 - name: Download and deploy Angular app
-  hosts: app_servers
+  hosts: web-server1
   become: yes
   tasks:
     - name: Download artifact from S3
       get_url:
-        url: "https://s3.amazonaws.com/your-s3-bucket-name/artifacts/{{ artifact_version }}/angular_app-{{ artifact_version }}.tar.gz"
+        url: "https://s3.amazonaws.com/nottie-angular-app /artifacts/{{ artifact_version }}/angular_app-{{ artifact_version }}.tar.gz"
         dest: "/tmp/angular_app.tar.gz"
 
     - name: Extract the artifact
