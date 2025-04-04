@@ -29,6 +29,7 @@ pipeline {
         stage('Create Artifact') {
             steps {
                 script {
+                def ARTIFACT_NAME = "angular_app-v15.tar.gz"
                 sh 'tar -czf angular_app-v15.tar.gz -C dist/angular_app .'
             }
         }
@@ -36,7 +37,8 @@ pipeline {
         stage('Upload to S3') {
             steps {
                 withAWS(credentials: 'aws-jenkins-credentials', region: "${AWS_REGION}") {
-                    s3Upload(file: "angular_app-$VERSION.tar.gz", bucket: "${S3_BUCKET}", path: "artifacts/")
+                    s3Upload(
+                      file: "angular_app-$VERSION.tar.gz", bucket: "${S3_BUCKET}", path: "artifacts/")
                 }
             }
         }
