@@ -7,11 +7,13 @@
     - aws_credentials.yml   # <-- Encrypted with ansible-vault
 
   vars:
-    artifact_version: "{{ artifact_version }}"  # Pass version dynamically from Jenkins
+    artifact_version: "{{ artifact_version }}"
     artifact_url: "s3://nottie-angular-app/artifacts/angular_app-{{ artifact_version }}.tar.gz"
     artifact_path: "/tmp/angular_app-{{ artifact_version }}.tar.gz"
     target_dir: "/var/www/html/angular_app"
-    s3_bucket: "nottie-angular-app"  # <-- Define the bucket name here
+    s3_bucket: "nottie-angular-app"
+    aws_access_key: "{{ aws_access_key }}"  # Now passed from Jenkins as extra-vars
+    aws_secret_key: "{{ aws_secret_key }}"  # Now passed from Jenkins as extra-vars
 
   tasks:
     - name: Install Apache
@@ -28,7 +30,7 @@
 
     - name: Download Angular App artifact from S3
       amazon.aws.s3_object:
-        bucket: "{{ s3_bucket }}"  # Use the defined variable for the bucket
+        bucket: "{{ s3_bucket }}"
         object: "artifacts/angular_app-{{ artifact_version }}.tar.gz"
         dest: "{{ artifact_path }}"
         mode: get
