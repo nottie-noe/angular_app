@@ -57,6 +57,14 @@ pipeline {
                     string(
                         credentialsId: 'ansible-vault-password',
                         variable: 'VAULT_PASSWORD'
+                    ),
+                    string(
+                        credentialsId: 'aws-jenkins-credentials',
+                        variable: 'AWS_ACCESS_KEY_ID'
+                    ),
+                    string(
+                        credentialsId: 'aws-jenkins-credentials',
+                        variable: 'AWS_SECRET_ACCESS_KEY'
                     )
                 ]) {
                     sh '''
@@ -69,7 +77,8 @@ pipeline {
                         ansible-playbook -i inventory deploy.yml \
                             --extra-vars "artifact_version=${VERSION}" \
                             --vault-password-file <(echo "$VAULT_PASSWORD") \
-                            --private-key $SSH_KEY
+                            --private-key $SSH_KEY \
+                            --extra-vars "aws_access_key=${AWS_ACCESS_KEY_ID} aws_secret_key=${AWS_SECRET_ACCESS_KEY}"
                     '''
                 }
             }
