@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        S3_BUCKET = 'nottie-angular-app' // Removed extra space
+        S3_BUCKET = 'nottie-angular-app'
         AWS_REGION = 'us-east-1' // e.g., us-east-1
         VERSION = "v${env.BUILD_NUMBER}"
     }
@@ -29,8 +29,8 @@ pipeline {
         stage('Create Artifact') {
             steps {
                 script {
-                    def ARTIFACT_NAME = "angular_app-v15.tar.gz"
-                    sh 'tar -czf angular_app-v15.tar.gz -C dist/angular_app .'
+                    def ARTIFACT_NAME = "angular_app-${VERSION}.tar.gz"  // Use VERSION here for consistency
+                    sh "tar -czf ${ARTIFACT_NAME} -C dist/angular_app ."
                 }
             }
         }
@@ -39,7 +39,7 @@ pipeline {
             steps {
                 withAWS(credentials: 'aws-jenkins-credentials', region: "${AWS_REGION}") {
                     s3Upload(
-                        file: "angular_app-${VERSION}.tar.gz", 
+                        file: "angular_app-${VERSION}.tar.gz",  // Use the same name as created earlier
                         bucket: "${S3_BUCKET}", 
                         path: "artifacts/"
                     )
