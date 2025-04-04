@@ -28,9 +28,8 @@ pipeline {
 
         stage('Create Artifact') {
             steps {
-                sh '''
-                tar -czf angular_app-$VERSION.tar.gz -C dist/angular_app .
-                '''
+                script {
+                sh 'tar -czf angular_app-v15.tar.gz -C dist/angular_app .'
             }
         }
 
