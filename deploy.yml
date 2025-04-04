@@ -3,7 +3,7 @@
   hosts: webserver
   become: true
   vars:
-    artifact_url: "s3://nottie-angular-app /artifacts/angular_app-{{ artifact_version }}.tar.gz"
+    artifact_url: "s3://nottie-angular-app/artifacts/angular_app-{{ artifact_version }}.tar.gz"  # Removed space here
     artifact_path: "/tmp/angular_app-{{ artifact_version }}.tar.gz"
     target_dir: "/var/www/html/angular_app"
 
@@ -45,4 +45,3 @@
       service:
         name: apache2
         state: restarted
-
