@@ -62,6 +62,7 @@ pipeline {
                         echo "🔐 Using Vault + SSH Credentials"
 
                         chmod 600 $SSH_KEY
+                        pwd
                         ls -lrt
 
                         ansible-playbook /home/ec2-user/angular_app/deploy.yml -i /home/ec2-user/angular_app/inventory \
