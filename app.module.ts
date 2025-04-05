@@ -3,8 +3,8 @@ import { BrowserModule } from '@angular/platform-browser';
 import { AppComponent } from './app.component';
 
 @NgModule({
-  imports: [BrowserModule, AppComponent],  // Import the standalone component
-  bootstrap: [AppComponent]
+  declarations: [AppComponent],  // Declare components here
+  imports: [BrowserModule],      // Import modules here (not components)
+  bootstrap: [AppComponent]      // Bootstrap the root component
 })
 export class AppModule { }
-
