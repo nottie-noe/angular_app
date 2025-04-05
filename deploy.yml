@@ -23,13 +23,13 @@
         name: apache2
         state: started
 
-    - name: Download the Angular app artifact from S3
-      amazon.aws.s3_object:
-        bucket: "{{ my_s3_bucket }}"
-        object: "artifacts/angular_app-{{ artifact_version }}.tar.gz"
-        dest: "{{ artifact_file }}"
-        mode: get
-      register: s3_result  # Capture the result of the S3 download task
+    - name: Download Angular app artifact from S3 using AWS CLI
+      command: "aws s3 cp s3://{{ my_s3_bucket }}/artifacts/angular_app-{{ artifact_version }}.tar.gz {{ artifact_file }}"
+      register: s3_result  # Capture the result of the AWS CLI download task
+      environment:
+        AWS_ACCESS_KEY_ID: "{{ lookup('env', 'AWS_ACCESS_KEY_ID') }}"
+        AWS_SECRET_ACCESS_KEY: "{{ lookup('env', 'AWS_SECRET_ACCESS_KEY') }}"
+
 
     - name: Extract Angular app artifact
       unarchive:
