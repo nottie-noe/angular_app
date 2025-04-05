@@ -24,7 +24,7 @@
         state: started
 
     - name: Download the Angular app artifact from S3
-      aws_s3:
+      amazon.aws.s3_object:
         bucket: "{{ my_s3_bucket }}"
         object: "artifacts/angular_app-{{ artifact_version }}.tar.gz"
         dest: "{{ artifact_file }}"
