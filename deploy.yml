@@ -71,14 +71,11 @@
         path: "{{ apache_config_file }}"
         regexp: '^DocumentRoot /var/www/html$'
         line: "DocumentRoot {{ target_dir }}"
-        notify:
-          - Restart Apache
 
     - name: Restart Apache to apply changes
       service:
         name: apache2
         state: restarted
-      when: apache_config_file is changed
 
   handlers:
     - name: Restart Apache
