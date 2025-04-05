@@ -65,7 +65,7 @@ pipeline {
                         pwd
                         ls -lrt
 
-                        ansible-playbook /home/ec2-user/angular_app/deploy.yml -i /home/ec2-user/angular_app/inventory \
+                        ansible-playbook deploy.yml -i /home/ec2-user/angular_app/inventory \
                             --extra-vars "artifact_version=${VERSION} aws_access_key=${AWS_ACCESS_KEY_ID} aws_secret_key=${AWS_SECRET_ACCESS_KEY}" \
                             --vault-password-file <(echo "$VAULT_PASSWORD") \
                             --private-key $SSH_KEY
