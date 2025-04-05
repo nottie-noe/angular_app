@@ -1,84 +1,82 @@
 ---
-- name: Deploy Angular App to Web Server
-  hosts: web-server1
-  become: true
-
+- name: Deploy Angular app to Web Server
+  hosts: webserver
+  become: yes
   vars:
     artifact_version: "{{ artifact_version }}"
-    artifact_url: "s3://nottie-angular-app/artifacts/angular_app-{{ artifact_version }}.tar.gz"
-    artifact_path: "/tmp/angular_app-{{ artifact_version }}.tar.gz"
-    target_dir: "/var/www/html/angular_app"
-    versioned_dir: "/var/www/html/angular_app-{{ artifact_version }}"
-    apache_config_file: "/etc/apache2/sites-available/000-default.conf"
+    app_directory: "/var/www/html"
+    app_symlink: "{{ app_directory }}/angular_app"
+    versioned_dir: "{{ app_directory }}/angular_app-{{ artifact_version }}"
+    artifact_file: "/tmp/angular_app-{{ artifact_version }}.tar.gz"
 
   tasks:
-    - name: Install Apache
+    - name: Ensure Apache is installed and running
       apt:
         name: apache2
         state: present
-        update_cache: yes
+      notify:
+        - restart apache
 
     - name: Ensure Apache is running
       service:
         name: apache2
         state: started
-        enabled: yes
 
-    - name: Download Angular App artifact from S3
-      amazon.aws.s3_object:
-        bucket: nottie-angular-app
+    - name: Download the Angular app artifact from S3
+      aws_s3:
+        bucket: "{{ nottie-angular-app }}"
         object: "artifacts/angular_app-{{ artifact_version }}.tar.gz"
-        dest: "{{ artifact_path }}"
+        dest: "{{ artifact_file }}"
         mode: get
-        aws_access_key: "{{ aws_access_key }}"
-        aws_secret_key: "{{ aws_secret_key }}"
-        region: us-east-1
+      register: s3_result
+      failed_when: s3_result.failed
 
-    - name: Create versioned target directory if it does not exist
-      file:
-        path: "{{ versioned_dir }}"
-        state: directory
-        mode: '0755'
-
-    - name: Extract the Angular app artifact
+    - name: Extract Angular app artifact
       unarchive:
-        src: "{{ artifact_path }}"
+        src: "{{ artifact_file }}"
         dest: "{{ versioned_dir }}"
         remote_src: yes
-        creates: "{{ versioned_dir }}/index.html"
-
-    - name: Set permissions for the deployed files (versioned directory)
-      file:
-        path: "{{ versioned_dir }}"
-        owner: www-data
-        group: www-data
-        recurse: yes
+      when: s3_result.changed
 
     - name: Remove existing 'current' symlink if it exists
       file:
-        path: "{{ target_dir }}"
+        path: "{{ app_symlink }}"
         state: absent
-      when: target_dir is exists
+      when: s3_result.changed
 
-    - name: Create or update 'current' symlink
+    - name: Create symlink to the new versioned app
       file:
-        path: "{{ target_dir }}"
         src: "{{ versioned_dir }}"
+        dest: "{{ app_symlink }}"
         state: link
+      when: s3_result.changed
+
+    - name: Set the correct permissions on the deployed files
+      file:
+        path: "{{ versioned_dir }}"
+        recurse: yes
+        owner: www-data
+        group: www-data
+        mode: "0755"
+      when: s3_result.changed
 
     - name: Update Apache config to point to the new DocumentRoot
       lineinfile:
-        path: "{{ apache_config_file }}"
-        regexp: '^DocumentRoot /var/www/html$'
-        line: "DocumentRoot {{ target_dir }}"
+        path: /etc/apache2/sites-available/000-default.conf
+        regexp: '^DocumentRoot'
+        line: "DocumentRoot {{ app_symlink }}"
+        state: present
+      notify:
+        - restart apache
 
     - name: Restart Apache to apply changes
       service:
         name: apache2
         state: restarted
+      when: s3_result.changed
 
   handlers:
-    - name: Restart Apache
+    - name: restart apache
       service:
         name: apache2
         state: restarted
