@@ -8,6 +8,7 @@
     artifact_url: "s3://nottie-angular-app/artifacts/angular_app-{{ artifact_version }}.tar.gz"
     artifact_path: "/tmp/angular_app-{{ artifact_version }}.tar.gz"
     target_dir: "/var/www/html/angular_app"
+    versioned_dir: "/var/www/html/angular_app-{{ artifact_version }}"
     apache_config_file: "/etc/apache2/sites-available/000-default.conf"
 
   tasks:
@@ -33,25 +34,37 @@
         aws_secret_key: "{{ aws_secret_key }}"
         region: us-east-1
 
-    - name: Create target directory if it does not exist
+    - name: Create versioned target directory if it does not exist
       file:
-        path: "{{ target_dir }}"
+        path: "{{ versioned_dir }}"
         state: directory
         mode: '0755'
 
     - name: Extract the Angular app artifact
       unarchive:
         src: "{{ artifact_path }}"
-        dest: "{{ target_dir }}"
+        dest: "{{ versioned_dir }}"
         remote_src: yes
-        creates: "{{ target_dir }}/index.html"
+        creates: "{{ versioned_dir }}/index.html"
 
-    - name: Set permissions for the deployed files
+    - name: Set permissions for the deployed files (versioned directory)
       file:
-        path: "{{ target_dir }}"
+        path: "{{ versioned_dir }}"
         owner: www-data
         group: www-data
         recurse: yes
+
+    - name: Remove existing 'current' symlink if it exists
+      file:
+        path: "{{ target_dir }}"
+        state: absent
+      when: target_dir is exists
+
+    - name: Create or update 'current' symlink
+      file:
+        path: "{{ target_dir }}"
+        src: "{{ versioned_dir }}"
+        state: link
 
     - name: Update Apache config to point to the new DocumentRoot
       lineinfile:
