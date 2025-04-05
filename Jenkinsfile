@@ -66,10 +66,7 @@ pipeline {
                         ls -lrt
                         hostname
 
-                        ansible-playbook deploy.yml  -i inventory.ini \ 
-                            --extra-vars "artifact_version=${VERSION} aws_access_key=${AWS_ACCESS_KEY_ID} aws_secret_key=${AWS_SECRET_ACCESS_KEY}" \
-                            --vault-password-file <(echo "$VAULT_PASSWORD") \
-                            --private-key $SSH_KEY
+                        ansible-playbook deploy.yml -i inventory.ini --extra-vars "artifact_version=${VERSION} aws_access_key=${AWS_ACCESS_KEY_ID} aws_secret_key=${AWS_SECRET_ACCESS_KEY}" --vault-password-file <(echo "$VAULT_PASSWORD") --private-key $SSH_KEY
                     '''
                 }
             }
