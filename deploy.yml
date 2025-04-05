@@ -29,7 +29,13 @@
       environment:
         AWS_ACCESS_KEY_ID: "{{ lookup('env', 'AWS_ACCESS_KEY_ID') }}"
         AWS_SECRET_ACCESS_KEY: "{{ lookup('env', 'AWS_SECRET_ACCESS_KEY') }}"
-
+    
+    - name: Ensure the versioned directory exists
+      file:
+        path: "{{ versioned_dir }}"
+        state: directory
+        mode: "0755"
+        when: s3_result.changed
 
     - name: Extract Angular app artifact
       unarchive:
