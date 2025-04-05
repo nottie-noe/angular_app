@@ -3,7 +3,6 @@
   hosts: web-server1
   become: yes
   vars:
-    vars:
     my-s3-bucket: "nottie-angular-app" 
     artifact_version: "{{ artifact_version }}"
     app_directory: "/var/www/html"
