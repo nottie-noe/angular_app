@@ -29,8 +29,6 @@
         object: "artifacts/angular_app-{{ artifact_version }}.tar.gz"
         dest: "{{ artifact_file }}"
         mode: get
-      register: s3_result
-      failed_when: s3_result.failed
 
     - name: Extract Angular app artifact
       unarchive:
