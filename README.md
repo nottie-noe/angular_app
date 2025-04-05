@@ -1,4 +1,4 @@
-# ANGULAR PROJECT - team18
+# ANGULAR PROJECT - TEAM18
 
 # AngularApp
 
