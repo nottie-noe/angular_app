@@ -63,7 +63,7 @@
       file:
         src: "{{ artifact_dest_dir }}"
         dest: "{{ target_dir }}"
-        state: symlink
+        state: link
 
     - name: Restart Apache to serve new content
       service:
