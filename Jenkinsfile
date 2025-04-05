@@ -5,12 +5,8 @@ pipeline {
         S3_BUCKET = 'nottie-angular-app'
         AWS_REGION = 'us-east-1'
         VERSION = "v${env.BUILD_NUMBER}"
-        ARTIFACT_NAME = "angular_app-${env.BUILD_NUMBER}.tar.gz"
-    }
-
-    triggers {
-        // Optional: Enable if using GitHub Webhook or polling
-        githubPush()
+        ARTIFACT_NAME = "angular_app-${VERSION}.tar.gz"
+        ARTIFACT_PATH = "packaged/${ARTIFACT_NAME}"
     }
 
     stages {
@@ -28,7 +24,7 @@ pipeline {
 
         stage('Build Angular App') {
             steps {
-                sh 'npm run build -- --configuration=production'
+                sh 'ng build --configuration=production'
             }
         }
 
@@ -36,7 +32,7 @@ pipeline {
             steps {
                 sh '''
                     mkdir -p packaged
-                    tar -czf packaged/${ARTIFACT_NAME} -C dist/angular_app .
+                    tar -czf ${ARTIFACT_PATH} -C dist/angular_app .
                 '''
             }
         }
@@ -45,9 +41,9 @@ pipeline {
             steps {
                 withAWS(credentials: 'aws-jenkins-credentials', region: "${AWS_REGION}") {
                     s3Upload(
-                        file: "packaged/${ARTIFACT_NAME}",
+                        file: "${ARTIFACT_PATH}",
                         bucket: "${S3_BUCKET}",
-                        path: "artifacts/"
+                        path: "artifacts/${ARTIFACT_NAME}"
                     )
                 }
             }
@@ -56,30 +52,21 @@ pipeline {
         stage('Deploy with Ansible') {
             steps {
                 withCredentials([
-                    sshUserPrivateKey(
-                        credentialsId: 'ansible-ssh-key',
-                        keyFileVariable: 'SSH_KEY'
-                    ),
-                    string(
-                        credentialsId: 'ansible-vault-password',
-                        variable: 'VAULT_PASSWORD'
-                    ),
-                    string(
-                        credentialsId: 'aws-access-key-id',
-                        variable: 'AWS_ACCESS_KEY_ID'
-                    ),
-                    string(
-                        credentialsId: 'aws-secret-access-key',
-                        variable: 'AWS_SECRET_ACCESS_KEY'
-                    )
+                    sshUserPrivateKey(credentialsId: 'ansible-ssh-key', keyFileVariable: 'SSH_KEY'),
+                    string(credentialsId: 'ansible-vault-password', variable: 'VAULT_PASSWORD'),
+                    string(credentialsId: 'aws-access-key-id', variable: 'AWS_ACCESS_KEY_ID'),
+                    string(credentialsId: 'aws-secret-access-key', variable: 'AWS_SECRET_ACCESS_KEY')
                 ]) {
                     sh '''
+                        echo "📦 Deploying version: ${VERSION}"
+                        echo "🔐 Using Vault + SSH Credentials"
+
                         chmod 600 $SSH_KEY
 
                         ansible-playbook -i inventory deploy.yml \
-                          --extra-vars "artifact_version=${VERSION} aws_access_key=${AWS_ACCESS_KEY_ID} aws_secret_key=${AWS_SECRET_ACCESS_KEY}" \
-                          --vault-password-file <(echo "$VAULT_PASSWORD") \
-                          --private-key $SSH_KEY
+                            --extra-vars "artifact_version=${VERSION} aws_access_key=${AWS_ACCESS_KEY_ID} aws_secret_key=${AWS_SECRET_ACCESS_KEY}" \
+                            --vault-password-file <(echo "$VAULT_PASSWORD") \
+                            --private-key $SSH_KEY
                     '''
                 }
             }
