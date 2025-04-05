@@ -7,9 +7,8 @@
     artifact_version: "{{ artifact_version }}"
     artifact_url: "s3://nottie-angular-app/artifacts/angular_app-{{ artifact_version }}.tar.gz"
     artifact_path: "/tmp/angular_app-{{ artifact_version }}.tar.gz"
-    deploy_base: "/var/www/html"
-    versioned_dir: "{{ deploy_base }}/angular_app-{{ artifact_version }}"
-    current_symlink: "{{ deploy_base }}/angular_app"
+    target_dir: "/var/www/html/angular_app"
+    artifact_dest_dir: "/var/www/html/angular_app-{{ artifact_version }}"
 
   tasks:
     - name: Install Apache
@@ -34,39 +33,39 @@
         aws_secret_key: "{{ aws_secret_key }}"
         region: us-east-1
 
+    - name: Remove existing symlink if it exists
+      file:
+        path: "{{ target_dir }}"
+        state: absent
+        follow: yes
+
     - name: Create versioned deployment directory
       file:
-        path: "{{ versioned_dir }}"
+        path: "{{ artifact_dest_dir }}"
         state: directory
         mode: '0755'
 
     - name: Extract the Angular app artifact
       unarchive:
         src: "{{ artifact_path }}"
-        dest: "{{ versioned_dir }}"
+        dest: "{{ artifact_dest_dir }}"
         remote_src: yes
+        creates: "{{ artifact_dest_dir }}/index.html"
 
     - name: Set permissions for the deployed files
       file:
-        path: "{{ versioned_dir }}"
+        path: "{{ artifact_dest_dir }}"
         owner: www-data
         group: www-data
         recurse: yes
 
     - name: Update the 'current' symlink to point to latest version
       file:
-        src: "{{ versioned_dir }}"
-        dest: "{{ current_symlink }}"
-        state: link
-        force: yes
+        src: "{{ artifact_dest_dir }}"
+        dest: "{{ target_dir }}"
+        state: symlink
 
-    - name: Restart Apache to serve updated content
+    - name: Restart Apache to serve new content
       service:
         name: apache2
         state: restarted
-
-    - name: Clean up older versions, keep only the latest 3
-      shell: |
-        ls -dt {{ deploy_base }}/angular_app-* | grep -v angular_app$ | tail -n +4 | xargs rm -rf
-      args:
-        warn: false
