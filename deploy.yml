@@ -1,6 +1,6 @@
 ---
 - name: Deploy Angular app to Web Server
-  hosts: webserver
+  hosts: web-server1
   become: yes
   vars:
     artifact_version: "{{ artifact_version }}"
