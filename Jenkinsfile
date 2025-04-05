@@ -5,6 +5,12 @@ pipeline {
         S3_BUCKET = 'nottie-angular-app'
         AWS_REGION = 'us-east-1'
         VERSION = "v${env.BUILD_NUMBER}"
+        ARTIFACT_NAME = "angular_app-${env.BUILD_NUMBER}.tar.gz"
+    }
+
+    triggers {
+        // Optional: Enable if using GitHub Webhook or polling
+        githubPush()
     }
 
     stages {
@@ -22,16 +28,16 @@ pipeline {
 
         stage('Build Angular App') {
             steps {
-                sh 'ng build --configuration=production'
+                sh 'npm run build -- --configuration=production'
             }
         }
 
         stage('Create Artifact') {
             steps {
-                script {
-                    def ARTIFACT_NAME = "angular_app-${VERSION}.tar.gz"
-                    sh "tar -czf ${ARTIFACT_NAME} -C dist/angular_app ."
-                }
+                sh '''
+                    mkdir -p packaged
+                    tar -czf packaged/${ARTIFACT_NAME} -C dist/angular_app .
+                '''
             }
         }
 
@@ -39,7 +45,7 @@ pipeline {
             steps {
                 withAWS(credentials: 'aws-jenkins-credentials', region: "${AWS_REGION}") {
                     s3Upload(
-                        file: "angular_app-${VERSION}.tar.gz",
+                        file: "packaged/${ARTIFACT_NAME}",
                         bucket: "${S3_BUCKET}",
                         path: "artifacts/"
                     )
@@ -70,14 +76,10 @@ pipeline {
                     sh '''
                         chmod 600 $SSH_KEY
 
-                        # Optional: Clean up old downloaded artifact
-                        rm -f /tmp/angular_app-${VERSION}.tar.gz
-
-                        # Run Ansible Playbook with Vault and AWS credentials
                         ansible-playbook -i inventory deploy.yml \
-                            --extra-vars "artifact_version=${VERSION} aws_access_key=${AWS_ACCESS_KEY_ID} aws_secret_key=${AWS_SECRET_ACCESS_KEY}" \
-                            --vault-password-file <(echo "$VAULT_PASSWORD") \
-                            --private-key $SSH_KEY
+                          --extra-vars "artifact_version=${VERSION} aws_access_key=${AWS_ACCESS_KEY_ID} aws_secret_key=${AWS_SECRET_ACCESS_KEY}" \
+                          --vault-password-file <(echo "$VAULT_PASSWORD") \
+                          --private-key $SSH_KEY
                     '''
                 }
             }
