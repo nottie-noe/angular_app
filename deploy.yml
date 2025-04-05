@@ -29,26 +29,27 @@
         object: "artifacts/angular_app-{{ artifact_version }}.tar.gz"
         dest: "{{ artifact_file }}"
         mode: get
+      register: s3_result  # Capture the result of the S3 download task
 
     - name: Extract Angular app artifact
       unarchive:
         src: "{{ artifact_file }}"
         dest: "{{ versioned_dir }}"
         remote_src: yes
-      when: s3_result.changed
+      when: s3_result.changed  # Only run if the artifact was downloaded
 
     - name: Remove existing 'current' symlink if it exists
       file:
         path: "{{ app_symlink }}"
         state: absent
-      when: s3_result.changed
+      when: s3_result.changed  # Only run if the artifact was downloaded
 
     - name: Create symlink to the new versioned app
       file:
         src: "{{ versioned_dir }}"
         dest: "{{ app_symlink }}"
         state: link
-      when: s3_result.changed
+      when: s3_result.changed  # Only run if the artifact was downloaded
 
     - name: Set the correct permissions on the deployed files
       file:
@@ -57,7 +58,7 @@
         owner: www-data
         group: www-data
         mode: "0755"
-      when: s3_result.changed
+      when: s3_result.changed  # Only run if the artifact was downloaded
 
     - name: Update Apache config to point to the new DocumentRoot
       lineinfile:
@@ -72,7 +73,7 @@
       service:
         name: apache2
         state: restarted
-      when: s3_result.changed
+      when: s3_result.changed  # Only restart Apache if the artifact was downloaded and deployed
 
   handlers:
     - name: restart apache

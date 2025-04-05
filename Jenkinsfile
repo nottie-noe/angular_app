@@ -62,9 +62,6 @@ pipeline {
                         echo "🔐 Using Vault + SSH Credentials"
 
                         chmod 600 $SSH_KEY
-                        pwd
-                        ls -lrt
-                        hostname
 
                         ansible-playbook -i inventory.ini deploy.yml -e "ansible_ssh_extra_args='-o StrictHostKeyChecking=no'" --extra-vars "artifact_version=${VERSION} aws_access_key=${AWS_ACCESS_KEY_ID} aws_secret_key=${AWS_SECRET_ACCESS_KEY}" --vault-password-file <(echo "$VAULT_PASSWORD") --private-key $SSH_KEY
                     '''
