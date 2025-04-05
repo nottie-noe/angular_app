@@ -6,7 +6,6 @@
     my_s3_bucket: "nottie-angular-app" 
     artifact_version: "{{ artifact_version }}"
     app_directory: "/var/www/html"
-    app_symlink: "{{ app_directory }}/angular_app"
     versioned_dir: "{{ app_directory }}/angular_app-{{ artifact_version }}"
     artifact_file: "/tmp/angular_app-{{ artifact_version }}.tar.gz"
 
@@ -29,7 +28,7 @@
       environment:
         AWS_ACCESS_KEY_ID: "{{ lookup('env', 'AWS_ACCESS_KEY_ID') }}"
         AWS_SECRET_ACCESS_KEY: "{{ lookup('env', 'AWS_SECRET_ACCESS_KEY') }}"
-    
+
     - name: Ensure the versioned directory exists
       file:
         path: "{{ versioned_dir }}"
@@ -42,19 +41,6 @@
         src: "{{ artifact_file }}"
         dest: "{{ versioned_dir }}"
         remote_src: yes
-      when: s3_result.changed  # Only run if the artifact was downloaded
-
-    - name: Remove existing 'current' symlink if it exists
-      file:
-        path: "{{ app_symlink }}"
-        state: absent
-      when: s3_result.changed  # Only run if the artifact was downloaded
-
-    - name: Create symlink to the new versioned app
-      file:
-        src: "{{ versioned_dir }}"
-        dest: "{{ app_symlink }}"
-        state: link
       when: s3_result.changed  # Only run if the artifact was downloaded
 
     - name: Set the correct permissions on the deployed files
@@ -70,7 +56,7 @@
       lineinfile:
         path: /etc/apache2/sites-available/000-default.conf
         regexp: '^DocumentRoot'
-        line: "DocumentRoot {{ app_symlink }}"
+        line: "DocumentRoot {{ versioned_dir }}"
         state: present
       notify:
         - restart apache
