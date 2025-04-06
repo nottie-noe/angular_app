@@ -1,0 +1,14 @@
+- name: Create database if it doesn't exist
+  mysql_db:
+    name: "{{ db_name }}"
+    state: present
+  become: yes
+
+- name: Create read-only user with privileges
+  mysql_user:
+    name: "{{ db_user }}"
+    password: "{{ db_password }}"
+    priv: "{{ db_name }}.*:SELECT"
+    host: "%"
+    state: present
+  become: yes

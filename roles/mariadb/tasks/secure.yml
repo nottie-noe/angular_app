@@ -1,0 +1,14 @@
+- name: Set root password for MariaDB
+  mysql_user:
+    name: root
+    password: "{{ db_root_password }}"
+    host: "localhost"
+    state: present
+  become: yes
+  when: db_root_password is defined
+
+- name: Secure MariaDB installation (remove insecure default settings)
+  command: mysql_secure_installation
+  args:
+    creates: /root/.my.cnf
+  become: yes

@@ -1,0 +1,8 @@
+# roles/mariadb/defaults/main.yml
+---
+# Default MariaDB settings
+db_name: "my_database"
+db_user: "db_user"
+db_password: "db_password"
+db_root_password: "root_password"
+mariadb_version: "10.5"

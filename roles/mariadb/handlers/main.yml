@@ -1,0 +1,7 @@
+# roles/mariadb/handlers/main.yml
+---
+- name: Restart MariaDB
+  service:
+    name: mariadb
+    state: restarted
+  become: yes
