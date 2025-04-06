@@ -1,0 +1,14 @@
+---
+- name: Setup MariaDB Database Server
+  hosts: db-servers  # Targeting only the database server group
+  become: yes  # Ensure we have sudo privileges for installing and configuring MariaDB
+
+  vars:
+    db_root_password: "root_password"  # Root password for MariaDB
+    db_name: "my_database"  # The database you want to create
+    db_user: "readonly_user"  # A user for accessing the DB
+    db_password: "readonly_password"  # Password for the db user
+
+  roles:
+    - mariadb  # Call the mariadb role here, which handles DB installation/configuration
+
