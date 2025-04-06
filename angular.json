@@ -1,7 +1,6 @@
 {
   "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
   "version": 1,
-  "newProjectRoot": "projects",
   "projects": {
     "angular_app": {
       "projectType": "application",
@@ -15,58 +14,48 @@
             "outputPath": "dist/angular_app",
             "index": "src/index.html",
             "main": "src/main.ts",
+            "polyfills": "src/polyfills.ts",
             "tsConfig": "tsconfig.app.json",
-            "styles": ["src/styles.scss"],
-            "assets": ["src/favicon.ico", "src/assets"],
-            "inlineStyleLanguage": "scss",
-            "polyfills": ["zone.js"]
+            "assets": [
+              "src/favicon.ico",
+              "src/assets"
+            ],
+            "styles": [
+              "src/styles.scss"
+            ],
+            "scripts": []
           },
           "configurations": {
             "production": {
-              "optimization": true,
-              "outputHashing": "all",
-              "sourceMap": false,
-              "namedChunks": false,
-              "extractLicenses": true,
-              "vendorChunk": false,
-              "buildOptimizer": true,
               "fileReplacements": [
                 {
                   "replace": "src/environments/environment.ts",
                   "with": "src/environments/environment.prod.ts"
                 }
-              ]
-            },
-            "development": {
-              "buildOptimizer": false,
-              "optimization": false,
-              "vendorChunk": true,
-              "sourceMap": true,
-              "namedChunks": true
+              ],
+              "optimization": true,
+              "outputHashing": "all",
+              "sourceMap": false,
+              "namedChunks": false,
+              "aot": true,
+              "extractLicenses": true,
+              "vendorChunk": false,
+              "buildOptimizer": true
             }
-          },
-          "defaultConfiguration": "development"
+          }
         },
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "browserTarget": "angular_app:build"
-          },
-          "configurations": {
-            "production": {
-              "browserTarget": "angular_app:build:production"
-            },
-            "development": {
-              "browserTarget": "angular_app:build:development"
-            }
-          },
-          "defaultConfiguration": "development"
+            "buildTarget": "angular_app:build"
+          }
         }
       }
     }
   },
   "defaultProject": "angular_app",
   "cli": {
-    "analytics": "8330d588-9e89-4191-89d1-c700f317216f"
+    "analytics": "80fc9cbb-b326-45e2-a309-861fb7d49fab"
   }
 }
+
