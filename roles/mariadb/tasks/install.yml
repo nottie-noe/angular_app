@@ -1,0 +1,13 @@
+---
+- name: Install MariaDB server
+  apt:
+    name: "mariadb-server={{ mariadb_version }}"
+    state: present
+  become: yes
+
+- name: Start and enable MariaDB service
+  service:
+    name: mariadb
+    state: started
+    enabled: yes
+  become: yes
